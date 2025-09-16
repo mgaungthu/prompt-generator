@@ -13,10 +13,6 @@ export interface ImageAnalysisResult {
 
 export const analyzeImage = async (imageUrl: string): Promise<string> => {
   try {
-    let imageInput: string;
-
-
-    console.log(convertImageToBase64(imageUrl))
 
     // 3. Call DeepSeek API
     const response = await fetch("https://api.deepseek.com/chat/completions", {
@@ -34,7 +30,7 @@ export const analyzeImage = async (imageUrl: string): Promise<string> => {
           },
           {
             role: "user",
-            content: `Analyze this image and return structured JSON only.\n\nImage: ${imageInput}`,
+            content: `Analyze this image and return structured JSON only.\n\nImage: ${imageUrl}`,
           },
         ],
       }),
