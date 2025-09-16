@@ -1,102 +1,244 @@
-import Image from "next/image";
+'use client';
+
+import Image from 'next/image';
+import { useState, useRef } from 'react';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [activeTab, setActiveTab] = useState<'image' | 'text'>('image');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [textInput, setTextInput] = useState('');
+  const [language, setLanguage] = useState('English');
+  const [negativePrompts, setNegativePrompts] = useState('Lowres, watermark, blurry');
+  const [generatedPrompt, setGeneratedPrompt] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setSelectedImage(imageUrl);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  const generatePrompt = async () => {
+    setIsLoading(true);
+    setGeneratedPrompt('');
+    
+    try {
+      const endpoint = activeTab === 'image' ? '/api/generate-from-image' : '/api/generate-from-text';
+      const body = activeTab === 'image' 
+        ? { imageUrl: selectedImage, language, negativePrompts }
+        : { text: textInput, language, negativePrompts };
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      
+      const data = await response.json();
+      if (data.error) {
+        alert(data.error);
+      } else {
+        setGeneratedPrompt(data.prompt);
+      }
+    } catch (error) {
+      console.error('Error generating prompt:', error);
+      alert('Failed to generate prompt. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setSelectedImage(null);
+    setTextInput('');
+    setGeneratedPrompt('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const copyPrompt = () => {
+    navigator.clipboard.writeText(generatedPrompt);
+    alert('Prompt copied to clipboard!');
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      <main className="max-w-2xl mx-auto px-4 py-6">
+        {/* Header */}
+        <header className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">Bagan AI</h1>
+          <div className="flex justify-center space-x-4 text-sm mb-4">
+            <span>Image → Prompt</span>
+            <span>Write → Prompt</span>
+            <span>Docs</span>
+          </div>
+          
+          <h2 className="text-xl font-semibold mb-4">Fast, Modern Prompt Builder</h2>
+          <p className="text-gray-400 text-sm mb-6">
+            Upload an image to extract style and generate prompts, or type your idea and auto-compose a generator-ready prompt. Built mobile-first with a clean, focused UI.
+          </p>
+          
+          <div className="flex justify-center gap-3 mb-6">
+            <span className="bg-gray-800 px-3 py-1 rounded text-xs">Mobile-first</span>
+            <span className="bg-gray-800 px-3 py-1 rounded text-xs">Dark UI</span>
+            <span className="bg-gray-800 px-3 py-1 rounded text-xs">Copy-friendly</span>
+          </div>
+          
+          <div className="flex border-b border-gray-700">
+            <button 
+              className={`flex-1 py-3 ${activeTab === 'image' ? 'border-b-2 border-white font-medium' : 'text-gray-400'}`}
+              onClick={() => setActiveTab('image')}
+            >
+              Image → Prompt
+            </button>
+            <button 
+              className={`flex-1 py-3 ${activeTab === 'text' ? 'border-b-2 border-white font-medium' : 'text-gray-400'}`}
+              onClick={() => setActiveTab('text')}
+            >
+              Write → Prompt
+            </button>
+          </div>
+        </header>
+
+        {/* Content based on active tab */}
+        {activeTab === 'image' ? (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Image → Prompt</h2>
+            <p className="text-gray-400 text-sm mb-6">
+              Upload an image and prepare prompts for Midjourney / SDXL / DALLE
+            </p>
+            
+            <div className="mb-6">
+              <h3 className="font-medium mb-2">Choose Image</h3>
+              <div 
+                className="block border-2 border-dashed border-gray-700 rounded-lg p-8 text-center cursor-pointer hover:border-gray-600 transition-colors"
+                onClick={triggerFileInput}
+              >
+                <input 
+                  type="file" 
+                  ref={fileInputRef}
+                  className="hidden" 
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageUpload}
+                />
+                <div className="text-3xl mb-2">+</div>
+                <p className="text-sm">Tap to select a photo</p>
+                <p className="text-xs text-gray-500 mt-1">JPG / PNG / WebP • up to 15MB</p>
+              </div>
+              
+              {selectedImage && (
+                <div className="mt-4">
+                  <Image 
+                  height={100}
+                    width={100}
+                    src={selectedImage} 
+                    alt="Preview" 
+                    className="w-full h-40 object-contain rounded-lg border border-gray-700"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Write → Prompt</h2>
+            <p className="text-gray-400 text-sm mb-6">
+              Type your idea and auto-compose a generator-ready prompt
+            </p>
+            
+            <div className="mb-6">
+              <textarea 
+                className="w-full h-40 p-4 bg-gray-800 rounded-lg border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Describe your idea here..."
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="h-px bg-gray-800 my-6"></div>
+
+        {/* Settings */}
+        <div className="mb-6">
+          <h3 className="font-medium mb-2">Output language</h3>
+          <select 
+            className="w-full p-3 bg-gray-800 rounded-lg border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <option value="English">English</option>
+            <option value="Spanish">Spanish</option>
+            <option value="French">French</option>
+            <option value="German">German</option>
+            <option value="Japanese">Japanese</option>
+          </select>
         </div>
+        
+        <div className="mb-6">
+          <h3 className="font-medium mb-2">Extra negative prompts (optional)</h3>
+          <input 
+            type="text" 
+            className="w-full p-3 bg-gray-800 rounded-lg border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={negativePrompts}
+            onChange={(e) => setNegativePrompts(e.target.value)}
+            placeholder="Lowres, watermark, blurry"
+          />
+        </div>
+        
+        <p className="text-xs text-gray-500 mb-6">
+          ▲ Policy: Avoid exact celebrity likenesses, brand replicas, or private-person lookalikes.
+        </p>
+        
+        <div className="flex space-x-4 mb-8">
+          <button 
+            className="flex-1 bg-blue-600 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            onClick={generatePrompt}
+            disabled={isLoading || (activeTab === 'image' && !selectedImage) || (activeTab === 'text' && !textInput.trim())}
+          >
+            {isLoading ? 'Generating...' : 'Generate Prompt'}
+          </button>
+          <button 
+            className="flex-1 bg-gray-800 py-3 rounded-lg border border-gray-700 hover:bg-gray-700 transition-colors"
+            onClick={resetForm}
+          >
+            Reset
+          </button>
+        </div>
+
+        {/* Generated Prompt */}
+        {generatedPrompt && (
+          <div className="bg-gray-800 rounded-lg p-6 mb-8">
+            <h3 className="text-lg font-semibold mb-4">Generated Prompt</h3>
+            <div className="bg-gray-700 p-4 rounded-lg whitespace-pre-wrap mb-4">
+              {generatedPrompt}
+            </div>
+            <button 
+              className="w-full bg-blue-600 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              onClick={copyPrompt}
+            >
+              Copy Prompt
+            </button>
+          </div>
+        )}
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      
+      <footer className="max-w-lg mx-auto px-4 py-6 text-center text-gray-500 text-xs">
+        <p>© 2025 Bagan AI</p>
+        <div className="flex justify-center space-x-4 mt-2">
+          <a href="#" className="hover:text-white transition-colors">Privacy</a>
+          <a href="#" className="hover:text-white transition-colors">Terms</a>
+        </div>
       </footer>
     </div>
   );
