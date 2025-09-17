@@ -1,6 +1,6 @@
 import { DeepSeekMessage } from "@/types";
 
-const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
+const DEEPSEEK_API_URL = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions';
 
 export const generateWithDeepSeek = async (messages: DeepSeekMessage[], max_tokens: number = 500) => {
   try {
