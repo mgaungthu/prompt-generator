@@ -3,9 +3,13 @@
 import Image from 'next/image';
 import { useState, useRef } from 'react';
 
+
+import Footer from "@/components/Footer";
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'image' | 'text'>('image');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [base64Image, setBase64Image] = useState<string | null>(null);
   const [textInput, setTextInput] = useState('');
   const [language, setLanguage] = useState('English');
   const [negativePrompts, setNegativePrompts] = useState('Lowres, watermark, blurry');
@@ -13,12 +17,23 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
+      const base64 = await toBase64(file);
       setSelectedImage(imageUrl);
+      setBase64Image(base64);
     }
+  };
+
+  const toBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+    });
   };
 
   const triggerFileInput = () => {
@@ -28,12 +43,14 @@ export default function Home() {
   const generatePrompt = async () => {
     setIsLoading(true);
     setGeneratedPrompt('');
-    
+
     try {
-      const endpoint = activeTab === 'image' ? '/api/generate-from-image' : '/api/generate-from-text';
-      const body = activeTab === 'image' 
-        ? { imageUrl: selectedImage, language, negativePrompts }
-        : { text: textInput, language, negativePrompts };
+      const endpoint =
+        activeTab === 'image' ? '/api/generate-from-image' : '/api/generate-from-text';
+      const body =
+        activeTab === 'image'
+          ? { imageUrl: base64Image, language, negativePrompts }
+          : { text: textInput, language, negativePrompts };
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -42,7 +59,7 @@ export default function Home() {
         },
         body: JSON.stringify(body),
       });
-      
+
       const data = await response.json();
       if (data.error) {
         alert(data.error);
@@ -72,62 +89,65 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <main className="max-w-2xl mx-auto px-4 py-6">
-        {/* Header */}
-        <header className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Bagan AI</h1>
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+     
+
+      {/* MAIN CONTENT */}
+      <main className="flex-grow max-w-2xl mx-auto px-4 py-6">
+        {/* Top Section */}
+        <div className="text-center mb-8">
           <div className="flex justify-center space-x-4 text-sm mb-4">
             <span>Image → Prompt</span>
             <span>Write → Prompt</span>
             <span>Docs</span>
           </div>
-          
+
           <h2 className="text-xl font-semibold mb-4">Fast, Modern Prompt Builder</h2>
           <p className="text-gray-400 text-sm mb-6">
-            Upload an image to extract style and generate prompts, or type your idea and auto-compose a generator-ready prompt. Built mobile-first with a clean, focused UI.
+            Upload an image to extract style and generate prompts, or type your idea and auto-compose a generator-ready prompt.
+            Built mobile-first with a clean, focused UI.
           </p>
-          
+
           <div className="flex justify-center gap-3 mb-6">
             <span className="bg-gray-800 px-3 py-1 rounded text-xs">Mobile-first</span>
             <span className="bg-gray-800 px-3 py-1 rounded text-xs">Dark UI</span>
             <span className="bg-gray-800 px-3 py-1 rounded text-xs">Copy-friendly</span>
           </div>
-          
+
           <div className="flex border-b border-gray-700">
-            <button 
+            <button
               className={`flex-1 py-3 ${activeTab === 'image' ? 'border-b-2 border-white font-medium' : 'text-gray-400'}`}
               onClick={() => setActiveTab('image')}
             >
               Image → Prompt
             </button>
-            <button 
+            <button
               className={`flex-1 py-3 ${activeTab === 'text' ? 'border-b-2 border-white font-medium' : 'text-gray-400'}`}
               onClick={() => setActiveTab('text')}
             >
               Write → Prompt
             </button>
           </div>
-        </header>
+        </div>
 
-        {/* Content based on active tab */}
+        {/* Content */}
         {activeTab === 'image' ? (
           <div>
             <h2 className="text-xl font-semibold mb-4">Image → Prompt</h2>
             <p className="text-gray-400 text-sm mb-6">
               Upload an image and prepare prompts for Midjourney / SDXL / DALLE
             </p>
-            
+
             <div className="mb-6">
               <h3 className="font-medium mb-2">Choose Image</h3>
-              <div 
+              <div
                 className="block border-2 border-dashed border-gray-700 rounded-lg p-8 text-center cursor-pointer hover:border-gray-600 transition-colors"
                 onClick={triggerFileInput}
               >
-                <input 
-                  type="file" 
+                <input
+                  type="file"
                   ref={fileInputRef}
-                  className="hidden" 
+                  className="hidden"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={handleImageUpload}
                 />
@@ -135,14 +155,14 @@ export default function Home() {
                 <p className="text-sm">Tap to select a photo</p>
                 <p className="text-xs text-gray-500 mt-1">JPG / PNG / WebP • up to 15MB</p>
               </div>
-              
+
               {selectedImage && (
                 <div className="mt-4">
-                  <Image 
-                  height={100}
+                  <Image
+                    height={100}
                     width={100}
-                    src={selectedImage} 
-                    alt="Preview" 
+                    src={selectedImage}
+                    alt="Preview"
                     className="w-full h-40 object-contain rounded-lg border border-gray-700"
                   />
                 </div>
@@ -155,9 +175,9 @@ export default function Home() {
             <p className="text-gray-400 text-sm mb-6">
               Type your idea and auto-compose a generator-ready prompt
             </p>
-            
+
             <div className="mb-6">
-              <textarea 
+              <textarea
                 className="w-full h-40 p-4 bg-gray-800 rounded-lg border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Describe your idea here..."
                 value={textInput}
@@ -172,7 +192,7 @@ export default function Home() {
         {/* Settings */}
         <div className="mb-6">
           <h3 className="font-medium mb-2">Output language</h3>
-          <select 
+          <select
             className="w-full p-3 bg-gray-800 rounded-lg border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
@@ -184,31 +204,33 @@ export default function Home() {
             <option value="Japanese">Japanese</option>
           </select>
         </div>
-        
+
         <div className="mb-6">
           <h3 className="font-medium mb-2">Extra negative prompts (optional)</h3>
-          <input 
-            type="text" 
+          <input
+            type="text"
             className="w-full p-3 bg-gray-800 rounded-lg border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={negativePrompts}
             onChange={(e) => setNegativePrompts(e.target.value)}
             placeholder="Lowres, watermark, blurry"
           />
         </div>
-        
+
         <p className="text-xs text-gray-500 mb-6">
           ▲ Policy: Avoid exact celebrity likenesses, brand replicas, or private-person lookalikes.
         </p>
-        
+
         <div className="flex space-x-4 mb-8">
-          <button 
+          <button
             className="flex-1 bg-blue-600 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
             onClick={generatePrompt}
-            disabled={isLoading || (activeTab === 'image' && !selectedImage) || (activeTab === 'text' && !textInput.trim())}
+            disabled={
+              isLoading || (activeTab === 'image' && !selectedImage) || (activeTab === 'text' && !textInput.trim())
+            }
           >
             {isLoading ? 'Generating...' : 'Generate Prompt'}
           </button>
-          <button 
+          <button
             className="flex-1 bg-gray-800 py-3 rounded-lg border border-gray-700 hover:bg-gray-700 transition-colors"
             onClick={resetForm}
           >
@@ -220,10 +242,8 @@ export default function Home() {
         {generatedPrompt && (
           <div className="bg-gray-800 rounded-lg p-6 mb-8">
             <h3 className="text-lg font-semibold mb-4">Generated Prompt</h3>
-            <div className="bg-gray-700 p-4 rounded-lg whitespace-pre-wrap mb-4">
-              {generatedPrompt}
-            </div>
-            <button 
+            <div className="bg-gray-700 p-4 rounded-lg whitespace-pre-wrap mb-4">{generatedPrompt}</div>
+            <button
               className="w-full bg-blue-600 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
               onClick={copyPrompt}
             >
@@ -232,14 +252,9 @@ export default function Home() {
           </div>
         )}
       </main>
-      
-      <footer className="max-w-lg mx-auto px-4 py-6 text-center text-gray-500 text-xs">
-        <p>© 2025 Bagan AI</p>
-        <div className="flex justify-center space-x-4 mt-2">
-          <a href="#" className="hover:text-white transition-colors">Privacy</a>
-          <a href="#" className="hover:text-white transition-colors">Terms</a>
-        </div>
-      </footer>
+
+      {/* FOOTER */}
+        <Footer/>
     </div>
   );
 }

@@ -13,7 +13,6 @@ export async function POST(request: NextRequest) {
 
     const imageDescription = await analyzeImage(imageUrl);
 
-    console.log(imageDescription,'dest');
     
     const prompt = await generateWithDeepSeek([
       {
