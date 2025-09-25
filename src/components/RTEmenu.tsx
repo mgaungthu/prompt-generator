@@ -1,16 +1,16 @@
 import React from 'react'
+import type { Editor } from '@tiptap/react'
 
-const RTEmenu = ({ editor }) => {
+interface RTEmenuProps {
+  editor: Editor | null;
+}
+
+const RTEmenu: React.FC<RTEmenuProps> = ({ editor }) => {
   if (!editor) {
     return null;
   }
+  
 
-  const addImage = () => {
-    const url = window.prompt('URL');
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
-  };
 
   return (
     <div className="flex flex-wrap gap-2 mb-4 p-2 border rounded-t-md bg-gray-50">
@@ -54,14 +54,7 @@ const RTEmenu = ({ editor }) => {
       >
         • List
       </button>
-      <button
-        type="button"
-        onClick={addImage}
-        className="p-2 text-gray-500 rounded hover:bg-gray-100"
-        title="Add Image"
-      >
-        Image
-      </button>
+      
     </div>
   );
 };
