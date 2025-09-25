@@ -3,6 +3,7 @@ export interface PromptRequest {
   imageUrl?: string;
   language: string;
   negativePrompts: string;
+  location:{latitude?:number;longitude?:number};
 }
 
 export interface PromptResponse {

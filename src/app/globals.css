@@ -16,3 +16,57 @@ body {
     rgb(var(--background-start-rgb));
   min-height: 100vh;
 }
+
+/* Add this to your global CSS */
+.ProseMirror {
+  outline: none;
+  min-height: 300px;
+  padding: 1rem;
+}
+
+.ProseMirror p {
+  margin-bottom: 1em;
+}
+
+.ProseMirror h1, .ProseMirror h2, .ProseMirror h3 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror ul, .ProseMirror ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1em;
+}
+
+.ProseMirror li {
+  margin-bottom: 0.5em;
+  color: #000;
+  list-style: disc outside;
+
+}
+
+.ProseMirror li::marker {
+  color: #000;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1em 0;
+}
+
+.ProseMirror blockquote {
+  border-left: 4px solid #ddd;
+  padding-left: 1rem;
+  margin: 1.5em 0;
+  font-style: italic;
+}
+
+.ProseMirror .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}

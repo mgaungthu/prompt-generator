@@ -1,6 +1,8 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { PromptRequest, PromptResponse } from '@/types';
 import generateWithDeepSeek from '@/lib/deepseek';
+import {supabaseServer} from '@/lib/supabase-server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,8 +25,27 @@ export async function POST(request: NextRequest) {
         content: `Create an AI image generation prompt based on: ${text}`
       }
     ]);
-
-    return NextResponse.json({ prompt } as PromptResponse);
+    // Insert into prompts table
+    const { data: record, error: dbError } = await supabaseServer
+      .from('prompts')
+      .insert([
+        {
+          type: 'text',
+          input_text: text,
+          input_image_url: null,
+          generated_prompt: prompt,
+        }
+      ])
+      .select()
+      .single();
+    if (dbError) {
+      console.error('Error inserting prompt into database:', dbError);
+      return NextResponse.json(
+        { error: 'Failed to save prompt to database.' },
+        { status: 500 }
+      );
+    }
+    return NextResponse.json({ prompt, record } as PromptResponse);
   } catch (error) {
     console.error('Error generating prompt from text:', error);
     return NextResponse.json(

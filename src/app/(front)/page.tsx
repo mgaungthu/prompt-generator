@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 
 import Footer from "@/components/Footer";
@@ -15,7 +15,20 @@ export default function Home() {
   const [negativePrompts, setNegativePrompts] = useState('Lowres, watermark, blurry');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+      },
+      (err) => {
+        console.warn('Geolocation error:', err);
+        setLocation(null);
+      }
+    );
+  }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -49,8 +62,8 @@ export default function Home() {
         activeTab === 'image' ? '/api/generate-from-image' : '/api/generate-from-text';
       const body =
         activeTab === 'image'
-          ? { imageUrl: base64Image, language, negativePrompts }
-          : { text: textInput, language, negativePrompts };
+          ? { imageUrl: base64Image, language, negativePrompts, location }
+          : { text: textInput, language, negativePrompts, location };
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -253,8 +266,7 @@ export default function Home() {
         )}
       </main>
 
-      {/* FOOTER */}
-        <Footer/>
+     
     </div>
   );
 }
