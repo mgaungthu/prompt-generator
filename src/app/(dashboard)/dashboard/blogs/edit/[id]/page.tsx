@@ -94,7 +94,7 @@ export default function EditBlogPage() {
       alert("Blog updated successfully!");
       router.push("/dashboard/blogs");
     } catch (error) {
-      alert("Error updating blog: " + error.message);
+      alert("Error updating blog: " + error);
     } finally {
       setSaving(false);
     }
