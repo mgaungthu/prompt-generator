@@ -68,7 +68,7 @@ export default function EditBlogPage() {
           }
         }
       } catch (error) {
-        alert("Error fetching blog: " + error.message);
+        alert("Error fetching blog: " + error);
       } finally {
         setLoading(false);
       }
