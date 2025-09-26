@@ -35,7 +35,9 @@ export default function Frontlayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <Analytics/>
         {children}
+       
       </body>
     </html>
   );
