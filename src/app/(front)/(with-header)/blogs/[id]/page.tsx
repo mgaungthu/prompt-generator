@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase-client";
+import DOMPurify from "isomorphic-dompurify";
 
 interface Blog {
   id: string;
@@ -50,7 +51,15 @@ export default function BlogDetailPage() {
         <p className="text-sm text-gray-400 mb-6">
           {new Date(blog.created_at).toLocaleString()}
         </p>
-        <div className="prose max-w-none text-gray-700">{blog.content}</div>
+        <div className="prose max-w-none text-gray-700">
+          {
+            <div
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(blog.content),
+              }}
+            />
+          }
+        </div>
       </div>
     </div>
   );

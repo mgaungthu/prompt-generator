@@ -1,9 +1,10 @@
-"use client";
 
+"use client"
 import Link from "next/link";
 
 
 import { useState, useEffect } from "react";
+import DOMPurify from "isomorphic-dompurify";
 import { supabase } from "@/lib/supabase-client";
 
 export default function BlogsPage() {
@@ -95,7 +96,11 @@ export default function BlogsPage() {
                 >
                   <td className="px-6 py-4 text-gray-700">{blog.title}</td>
                   <td className="px-6 py-4 text-gray-700">
-                    {blog.content.slice(0, 50)}
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(blog.content.slice(0, 50)),
+                    }}
+                  />
                   </td>
                   <td className="px-6 py-4 text-gray-700">
                     {new Date(blog.created_at).toLocaleString()}

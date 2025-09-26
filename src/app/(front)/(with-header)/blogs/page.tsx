@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase-client";
 import Link from "next/link";
+import DOMPurify from "isomorphic-dompurify";
 
 interface Blog {
   id: string;
@@ -51,9 +52,14 @@ export default function FrontBlogListPage() {
                 <Link href={`/blogs/${blog.id}`}>{blog.title}</Link>
               </h2>
               <p className="text-gray-600 mb-3">
-                {blog.content.length > 150
+
+                  <div
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(blog.content.length > 150
                   ? blog.content.slice(0, 150) + "..."
-                  : blog.content}
+                  : blog.content),
+                  }}
+                />
               </p>
               <p className="text-sm text-gray-400">
                 {new Date(blog.created_at).toLocaleString()}
