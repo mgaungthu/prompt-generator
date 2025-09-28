@@ -1,12 +1,10 @@
 import type { Metadata } from 'next';
 import { Analytics } from '@vercel/analytics/next';
 
-
 import { Inter } from 'next/font/google';
 import '../globals.css'
 import Footer from '@/components/Footer';
-import { DefaultSeo } from "next-seo";
-import SEO from "@/../next-seo.config"; 
+
 
 
 const inter = Inter({ subsets: ['latin'] });
