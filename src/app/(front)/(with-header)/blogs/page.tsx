@@ -7,6 +7,7 @@ import DOMPurify from "isomorphic-dompurify";
 
 interface Blog {
   id: string;
+  slug: string;
   title: string;
   content: string;
   created_at: string;
@@ -49,7 +50,7 @@ export default function FrontBlogListPage() {
               className="p-6 bg-white shadow-md rounded-lg border border-gray-200 hover:shadow-lg transition"
             >
               <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                <Link href={`/blogs/${blog.id}`}>{blog.title}</Link>
+                <Link href={`/blogs/${blog.slug}`}>{blog.title}</Link>
               </h2>
               <p className="text-gray-600 mb-3">
 
